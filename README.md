@@ -27,7 +27,8 @@ pipeline as easily as possible, with no heavyweight dependencies whatsoever.
 You can plug your processing steps together in whatever configuration you like,
 and set up and tear down your pipeline all in one place, with no remote calls
 to servers, no fancy configuration files, and without ever adding any more work
-to your devops team.
+to your devops team. You write in pure Python, and you can pass any pickle-able
+object through the pipeline.
 
 The package includes classes for reading from and writing to Kafka. This allows
 you to (e.g.) listen to several Kafka topics at the same time, process the
