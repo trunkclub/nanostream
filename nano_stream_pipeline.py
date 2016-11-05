@@ -2,13 +2,13 @@ import networkx as nx
 import Queue
 import threading
 import time
-from trunk_club_streams.tc_stream_processor import TrunkClubStreamProcessor
+from nano_stream_processor import NanoStreamProcessor
 
 
 DEFAULT_MAX_QUEUE_SIZE = 128
 
 
-class TrunkClubStreamGraph(object):
+class NanoStreamGraph(object):
     """
     They're actually directed graphs.
     """
@@ -51,14 +51,20 @@ class TrunkClubStreamGraph(object):
         worker_object.parent = self 
         
     def start(self, block=False):
+        """
+        We check whether any of the nodes have a "run_on_start" function.
+        """
+        for node in self.graph.nodes():
+            if hasattr(node, 'run_on_start'):
+                node.run_on_start()
         for node in self.graph.nodes():
             worker = threading.Thread(target=node.start)
             worker.setDaemon(True)
             self.thread_list.append(worker)
             worker.start()
         for worker_tuple in self.workers:
-            if not isinstance(worker_tuple[0], TrunkClubGraphWorker):
-                raise Exception("Needs to be a TrunkClubGraphWorker")
+            if not isinstance(worker_tuple[0], NanoGraphWorker):
+                raise Exception("Needs to be a NanoGraphWorker")
             worker_tuple[0].graph = self
         
             def _thread_worker(self):
@@ -74,10 +80,10 @@ class TrunkClubStreamGraph(object):
                 thread_worker.join()
 
 
-class TrunkClubGraphWorker(object):
+class NanoGraphWorker(object):
     """
     Subclass this, and override the `worker` method. Call `add_worker`
-    on the `TrunkClubStreamGraph` object.
+    on the `NanoStreamGraph` object.
     """
     def __init__(self):
         pass
@@ -86,32 +92,32 @@ class TrunkClubGraphWorker(object):
         raise NotImplementedError("Need to override worker method")
 
 
-class TrunkClubPrinter(TrunkClubStreamProcessor):
+class NanoPrinter(NanoStreamProcessor):
     def process_item(self, message):
         pass
         # print message
 
 
 if __name__ == '__main__':
-    import tc_kafka
-    from tc_stream_processor import TrunkClubStreamProcessor
+    import nano_kafka
+    from nano_stream_processor import NanoStreamProcessor
 
-    class TrunkClubPrinter(TrunkClubStreamProcessor):
+    class NanoPrinter(NanoStreamProcessor):
         def process_item(self, message):
             pass
 
-    class PrintFooWorker(TrunkClubGraphWorker):
+    class PrintFooWorker(NanoGraphWorker):
         def worker(self):
             print 'foo'
             print self.__dict__
 
-    collect_offsets_worker = tc_kafka.CollectKafkaOffsets()
+    collect_offsets_worker = nano_kafka.CollectKafkaOffsets()
 
-    my_printer = TrunkClubPrinter()
+    my_printer = NanoPrinter()
     my_foo_printer = PrintFooWorker()
-    some_listener = tc_kafka.TrunkClubKafkaListener(
+    some_listener = nano_kafka.NanoKafkaListener(
         topics=['public.members.v1'])
-    pipeline = TrunkClubStreamGraph()
+    pipeline = NanoStreamGraph()
     pipeline.add_node(some_listener)
     pipeline.add_node(my_printer)
     pipeline.add_edge(some_listener, my_printer)

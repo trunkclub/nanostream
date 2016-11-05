@@ -1,3 +1,6 @@
+"""
+Class for plugging Kafka topics into the nanograph.
+"""
 import os
 import json
 import time
@@ -12,9 +15,6 @@ from nano_streams.nano_stream_pipeline import (
 from nano_streams.nano_stream_processor import NanoStreamProcessor
 
 
-logging.basicConfig(filename='nano_streams.log', level=logging.INFO)
-
-DEFAULT_BOOTSTRAP_SERVER_1 = 'svc12.prd.aws1.trunkclub.systems:9092'
 MAX_QUEUE_SIZE = 1000
 
 
@@ -36,7 +36,8 @@ class NanoKafkaListener(NanoStreamSender):
                  message_parser=None,
                  default_offset=0,
                  update_offset_interval=2,
-                 auto_offset_reset='earliest'):
+                 auto_offset_reset='earliest',
+                 group_id=None):
         self.message_parser = message_parser or (lambda x: x)
         self.payload_only = payload_only
         self.offset_dictionary = (
@@ -44,14 +45,26 @@ class NanoKafkaListener(NanoStreamSender):
         self.started = time.time()
         self.auto_offset_reset = auto_offset_reset
         self.topics = topics or []
-        self.bootstrap_servers = bootstrap_servers or os.environ.get(
-            'KAFKA_BOOTSTRAP_SERVERS', DEFAULT_BOOTSTRAP_SERVER_1).split(',')
+        self.bootstrap_servers = ','.split(
+            bootstrap_servers or os.environ.get('BOOTSTRAP_SERVERS', ''))
+        self.producer = kafka.KafkaProducer(
+            bootstrap_servers=self.bootstrap_servers)
+        self.group_id = group_id
+        self.auto_offset_reset = auto_offset_rest
+
+        if len(self.bootstrap_servers) == 0:
+            raise Exception(
+                "No Kafka bootstrap server has been specified. Either create "
+                "NanoKafkaProducer with kwarg `bootstrap_servers` set to a comma-"
+                "delimited list or set the environment variable "
+                "BOOTSTRAP_SERVERS.")
+        
         self.listener = kafka.KafkaConsumer(
-            group_id='zacs_screwball_thing',
-            fenanoh_min_bytes=0,
+            group_id=group_id,
+            fetch_min_bytes=0,
             enable_auto_commit=True,
-            bootstrap_servers=[DEFAULT_BOOTSTRAP_SERVER_1],
-            auto_offset_reset=auto_offset_reset)
+            bootstrap_servers=self.bootstrap_servers,
+            auto_offset_reset=self.auto_offset_reset)
         self.partitions_dictionary = {
             topic: self.listener.partitions_for_topic(topic) for
             topic in self.topics}
@@ -121,6 +134,7 @@ class NanoKafkaListener(NanoStreamSender):
 
     def messages(self):
         """
+        For using the class outside of a data pipeline.
         """
         counter = 0
         while 1:
@@ -147,10 +161,17 @@ class NanoKafkaProducer(object):
         self.topic = topic
         self.input_queue = input_queue
         self.encode_output = encode_output
-        self.bootstrap_servers = (
-            bootstrap_servers or DEFAULT_BOOTSTRAP_SERVER_1)
+        self.bootstrap_servers = ','.split(
+            bootstrap_servers or os.environ.get('BOOTSTRAP_SERVERS', ''))
         self.producer = kafka.KafkaProducer(
             bootstrap_servers=self.bootstrap_servers)
+
+        if len(self.bootstrap_servers) == 0:
+            raise Exception(
+                "No Kafka bootstrap server has been specified. Either create "
+                "NanoKafkaProducer with kwarg `bootstrap_servers` set to a comma-"
+                "delimited list or set the environment variable "
+                "BOOTSTRAP_SERVERS.")
 
     def send(self, message, **kwargs):
         try:
@@ -161,10 +182,8 @@ class NanoKafkaProducer(object):
             message = json.dumps(message)
         except:
             pass
-        print message
-        print type(message)
+        # Kafka library requires messages to be case as bytes
         message = bytes(message)
-        print type(message)
         self.producer.send(self.topic, message, **kwargs)
 
     def start(self, **kwargs):
@@ -183,8 +202,6 @@ class CollectKafkaOffsets(NanoGraphWorker):
             if isinstance(node, NanoKafkaListener):
                 offset_dictionary.update(node.offset_dictionary)
         self.parent.offset_dictionary.update(offset_dictionary)
-        print self.parent.offset_dictionary
-        print pickle.dumps(self.parent.offset_dictionary)
 
 
 def main():

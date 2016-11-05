@@ -1,3 +1,7 @@
+"""
+We pass messages through the nanostream as base64-encoded
+pickle files.
+"""
 import cPickle as pickle
 import base64
 
