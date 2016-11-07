@@ -1,8 +1,25 @@
+"""
+Copyright (C) 2016 Zachary Ernst
+zernst@trunkclub.com or zac.ernst@gmail.com
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
 import Queue
-from tc_stream_encoder import encode, decode
+from nano_stream_encoder import encode, decode
 
 
-class TrunkClubStreamSender(object):
+class NanoStreamSender(object):
     """
     Anything with an output queue.
     """
@@ -15,7 +32,7 @@ class TrunkClubStreamSender(object):
             output_queue.put(message, block=True, timeout=None)
 
 
-class TrunkClubStreamListener(object):
+class NanoStreamListener(object):
     """
     Anything that reads from an input queue.
     """
@@ -29,19 +46,19 @@ class TrunkClubStreamListener(object):
                 self.queue_message(one_item)
 
 
-class TrunkClubStreamProcessor(TrunkClubStreamListener, TrunkClubStreamSender):
+class NanoStreamProcessor(NanoStreamListener, NanoStreamSender):
     """
     """
     def __init__(self, input_queue=None, output_queue=None):
         self.input_queue = None
-        super(TrunkClubStreamProcessor, self).__init__()
-        self.start = super(TrunkClubStreamProcessor, self).start
+        super(NanoStreamProcessor, self).__init__()
+        self.start = super(NanoStreamProcessor, self).start
 
     def process_item(self, *args, **kwargs):
         raise Exception("process_item needs to be overridden in child class.")
 
 
-class PrintStreamProcessor(TrunkClubStreamProcessor):
+class PrintStreamProcessor(NanoStreamProcessor):
     """
     Just a class that prints, for testing purposes only.
     """
@@ -50,7 +67,7 @@ class PrintStreamProcessor(TrunkClubStreamProcessor):
         return item
 
 
-class ExtractKeysStreamProcessor(TrunkClubStreamProcessor):
+class ExtractKeysStreamProcessor(NanoStreamProcessor):
     """
     Just extracts the keys from a dictionary. For testing.
     """
