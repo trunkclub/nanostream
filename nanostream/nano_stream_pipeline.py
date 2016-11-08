@@ -19,7 +19,7 @@ import networkx as nx
 import Queue
 import threading
 import time
-from nano_stream_processor import NanoStreamProcessor
+from nano_stream_processor import NanoStreamProcessor, NanoStreamListener, NanoStreamSender, NanoStreamListenerMultiplex
 
 
 DEFAULT_MAX_QUEUE_SIZE = 128
@@ -58,10 +58,15 @@ class NanoStreamGraph(object):
                 self.add_node(source)
             if target not in self.node_list:
                 self.add_node(target)
-            edge_queue = target.input_queue or Queue.Queue(max_queue_size)
-            self.graph.add_edge(source, target, {'edge_queue': edge_queue})
-            source.output_queue_list.append(edge_queue)
-            target.input_queue = edge_queue
+            if isinstance(target, NanoStreamListenerMultiplex):
+                target_list = target.listeners
+            else:
+                target_list = [target]
+            for target in target_list:
+                edge_queue = target.input_queue or Queue.Queue(max_queue_size)
+                self.graph.add_edge(source, target, {'edge_queue': edge_queue})
+                source.output_queue_list.append(edge_queue)
+                target.input_queue = edge_queue
 
     def add_worker(self, worker_object, interval=3):
         self.workers.append((worker_object, interval,))
@@ -115,7 +120,39 @@ class NanoPrinter(NanoStreamProcessor):
         # print message
 
 
+def test_multiplexer():
+
+    class NanoCounter(NanoStreamSender):
+   
+        def __init__(self):
+            self.counter = 0
+            super(NanoCounter, self).__init__()
+        
+        def start(self):
+            while 1:
+                output = 'NanoCounter:' + str(self.counter)
+                self.counter += 1
+                self.queue_message(output)
+
+    
+    class NanoMultiPrint(NanoStreamListener):
+        def process_item(self, message):
+            print message
+            time.sleep(1)
+
+    nano_counter = NanoCounter()
+    nano_multi_print = NanoMultiPrint(workers=3)
+    import pdb; pdb.set_trace()
+    pipeline = NanoStreamGraph()
+    pipeline.add_edge(nano_counter, nano_multi_print)
+    pipeline.start()
+
+
+
 if __name__ == '__main__':
+    test_multiplexer()
+    
+def bar():    
     import nano_kafka
     from nano_stream_processor import NanoStreamProcessor
 
@@ -139,4 +176,4 @@ if __name__ == '__main__':
     pipeline.add_node(my_printer)
     pipeline.add_edge(some_listener, my_printer)
     pipeline.add_worker(my_foo_printer)
-    pipeline.start()
+    # pipeline.start()

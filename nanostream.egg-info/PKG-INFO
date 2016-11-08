@@ -1,6 +1,6 @@
 Metadata-Version: 1.0
 Name: nanostream
-Version: 0.1
+Version: 0.1a5
 Summary: Stream-processing patterns at small scale, no overhead
 Home-page: https://github.com/trunkclub/nanostream
 Author: Zachary Ernst

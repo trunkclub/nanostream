@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import Queue
+import types
 from nano_stream_encoder import encode, decode
 
 
@@ -32,10 +33,52 @@ class NanoStreamSender(object):
             output_queue.put(message, block=True, timeout=None)
 
 
+class NanoStreamListenerMultiplex(object):
+    def __init__(self, *args, **kwargs):
+        self.multiplex_workers = kwargs['workers']
+        self.listener_class = kwargs['listener_class']
+        del kwargs['workers']
+        self.listeners = [
+            NanoStreamListener(
+                *args, index=index, workers=1,
+                child_class=self.listener_class, **kwargs)
+            for index in range(self.multiplex_workers)]
+        for index, listener in enumerate(self.listeners):
+            listener.multiplexer_index = index
+            child_class_function_dict = {
+                function_name: function for function_name, function
+                in self.listener_class.__dict__.iteritems() if
+                isinstance(function, types.FunctionType)}
+            # me.rebound = types.MethodType(unbound, me, Person)
+            for function_name, the_function in child_class_function_dict.iteritems():
+                setattr(
+                    listener, function_name, types.MethodType(
+                        the_function, listener, self.listener_class)) 
+
+    def start(self):
+        for i in self.listeners:
+            i.start()
+
+
 class NanoStreamListener(object):
     """
     Anything that reads from an input queue.
     """
+
+    def __init__(self, workers=1, index=0, child_class=None, **kwargs):
+        self.workers = workers
+        self.child_class = child_class
+        # Change the class if we're going to multiplex it
+        if self.workers > 1:
+            self.child_class = self.__class__
+            # Get all the user-defined functions and pass them through
+            self.__class__ = NanoStreamListenerMultiplex
+            self.__init__(
+                workers=workers, listener_class=self.child_class, **kwargs)
+        else:
+            self.input_queue = None
+            self.index = index
+
     def start(self):
         while 1:
             one_item = self.input_queue.get(block=True, timeout=None)
@@ -50,7 +93,6 @@ class NanoStreamProcessor(NanoStreamListener, NanoStreamSender):
     """
     """
     def __init__(self, input_queue=None, output_queue=None):
-        self.input_queue = None
         super(NanoStreamProcessor, self).__init__()
         self.start = super(NanoStreamProcessor, self).start
 
