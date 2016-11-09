@@ -49,7 +49,6 @@ class NanoStreamListenerMultiplex(object):
                 function_name: function for function_name, function
                 in self.listener_class.__dict__.iteritems() if
                 isinstance(function, types.FunctionType)}
-            # me.rebound = types.MethodType(unbound, me, Person)
             for function_name, the_function in child_class_function_dict.iteritems():
                 setattr(
                     listener, function_name, types.MethodType(
@@ -71,7 +70,6 @@ class NanoStreamListener(object):
         # Change the class if we're going to multiplex it
         if self.workers > 1:
             self.child_class = self.__class__
-            # Get all the user-defined functions and pass them through
             self.__class__ = NanoStreamListenerMultiplex
             self.__init__(
                 workers=workers, listener_class=self.child_class, **kwargs)
