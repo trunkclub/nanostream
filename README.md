@@ -19,6 +19,36 @@ topology. Your pipeline will have a `start` method that will run everything
 asynchronously. It'll use back-pressure to prevent any queues from becoming
 overrun. Everything runs in-memory, making it pretty fast.
 
+# Basic example
+
+def test_multiplexer():                                                                                                                                                                                                         [31/204]
+```
+    class NanoCounter(NanoStreamSender):
+   
+        def __init__(self):
+            self.counter = 0
+            super(NanoCounter, self).__init__()
+        
+        def start(self):
+            while 1:
+                output = 'NanoCounter:' + str(self.counter)
+                self.counter += 1
+                self.queue_message(output)
+
+    
+    class NanoMultiPrint(NanoStreamListener):
+        def process_item(self, message):
+            print message
+            time.sleep(1)
+
+    nano_counter = NanoCounter()
+    nano_multi_print = NanoMultiPrint(workers=3)
+    import pdb; pdb.set_trace()
+    pipeline = NanoStreamGraph()
+    pipeline.add_edge(nano_counter, nano_multi_print)
+    pipeline.start()
+```
+
 # Intended audience
 
 This package trades off scalability for simplicity. It does not try to
