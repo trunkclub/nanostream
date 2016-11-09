@@ -21,7 +21,29 @@ overrun. Everything runs in-memory, making it pretty fast.
 
 # Basic example
 
-def test_multiplexer():                                                                                                                                                                                                         [31/204]
+There are four classes that underpin `nanostream`:
+
+1. `NanoStreamSender` sends data into the pipeline. It is analogous to a
+   "Spout" in Storm. To use one, you create your own class that inherits it,
+   and provide a `start` method which endless creates messages and calls the
+   `queue_message` method with them. An `__init__` function is optional, but if
+   you use one, be sure to call the superclass's `__init__` using `super()`.
+2. `NanoStreamListener` picks up messages and does something. To use one, you
+   define your own class which inherits from it, and provide a `process_item`
+   method which takes a message as an argument.
+3. Of course, in a non-trivial application you'll have steps that need both to
+   listen and to send. You can inherit from both classes to do this; or there
+   is a `NanoStreamProcessor` class that's provided as a convenience.
+4. When you've instantiated your classes, you instantiate a `NanoStreamGraph`
+   object, which represents the entire pipeline. After it's defined, you can
+   use `add_edge(source, target)` to create a flow from `source` to `target`.
+   To start it, call the `start` method on your pipeline.
+
+Here's a simple example of a trivial pipeline with two steps. The first step
+produces numbers; the second prints them. We create three processes that do the
+printing, and we also insert a one-second delay after each printed number to
+demonstrate how the pipeline copes with a bottleneck.
+
 ```
     class NanoCounter(NanoStreamSender):
    
@@ -48,6 +70,8 @@ def test_multiplexer():                                                         
     pipeline.add_edge(nano_counter, nano_multi_print)
     pipeline.start()
 ```
+
+
 
 # Intended audience
 
