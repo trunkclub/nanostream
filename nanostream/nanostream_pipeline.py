@@ -16,10 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import networkx as nx
-import Queue
 import threading
+import pyprimes
 import time
-from nano_stream_processor import NanoStreamProcessor, NanoStreamListener, NanoStreamSender, NanoStreamListenerMultiplex
+import multiprocessing as mp
+from nanostream_processor import (
+    NanoStreamProcessor, NanoStreamListener,
+    NanoStreamSender, NanoStreamListenerMultiplex,
+    NanoStreamQueue)
 
 
 DEFAULT_MAX_QUEUE_SIZE = 128
@@ -29,7 +33,7 @@ class NanoStreamGraph(object):
     """
     They're actually directed graphs.
     """
-    def __init__(self):
+    def __init__(self, multiprocess=False):
         self.graph = nx.DiGraph()
         self.node_list = []  # nodes are listeners, processors, etc.
         self.edge_list = []  # edges are queues
@@ -37,6 +41,9 @@ class NanoStreamGraph(object):
         self.workers = []  # A list of functions to execute intermittantly
         self.worker_interval = None
         self.offset_dictionary = {}
+        self.multiprocess = multiprocess
+        self.queue_constructor = NanoStreamQueue # mp.Queue if self.multiprocess else Queue.Queue
+        self.thread_constructor = mp.Process if self.multiprocess else threading.Thread 
 
     def add_node(self, node):
         self.node_list.append(node)
@@ -62,11 +69,16 @@ class NanoStreamGraph(object):
                 target_list = target.listeners
             else:
                 target_list = [target]
+            edge_queue = (
+                target.input_queue if hasattr(target, 'input_queue') else
+                self.queue_constructor(max_queue_size, multiprocess=self.multiprocess))
             for target in target_list:
-                edge_queue = target.input_queue or Queue.Queue(max_queue_size)
-                self.graph.add_edge(source, target, {'edge_queue': edge_queue})
-                source.output_queue_list.append(edge_queue)
+                self.graph.add_edge(
+                    source, target,
+                    {'edge_queue': edge_queue,
+                     'queue_lock': threading.Lock()})
                 target.input_queue = edge_queue
+            source.output_queue_list.append(edge_queue)
 
     def add_worker(self, worker_object, interval=3):
         self.workers.append((worker_object, interval,))
@@ -80,8 +92,9 @@ class NanoStreamGraph(object):
             if hasattr(node, 'run_on_start'):
                 node.run_on_start()
         for node in self.graph.nodes():
-            worker = threading.Thread(target=node.start)
-            worker.setDaemon(True)
+            worker = self.thread_constructor(target=node.start)
+            if not self.multiprocess:
+                worker.setDaemon(True)
             self.thread_list.append(worker)
             worker.start()
         for worker_tuple in self.workers:
@@ -131,30 +144,31 @@ def test_multiplexer():
         def start(self):
             while 1:
                 output = 'NanoCounter:' + str(self.counter)
+                output = self.counter
                 self.counter += 1
                 self.queue_message(output)
 
     
     class NanoMultiPrint(NanoStreamListener):
         def process_item(self, message):
-            print message
-            time.sleep(1)
+            print pyprimes.nth_prime(message)
 
     nano_counter = NanoCounter()
-    nano_multi_print = NanoMultiPrint(workers=3)
-    import pdb; pdb.set_trace()
-    pipeline = NanoStreamGraph()
+    nano_multi_print = NanoMultiPrint(workers=10)
+    pipeline = NanoStreamGraph(multiprocess=False)
     pipeline.add_edge(nano_counter, nano_multi_print)
+    # import pdb; pdb.set_trace()
     pipeline.start()
 
 
 
 if __name__ == '__main__':
     test_multiplexer()
-    
+
+
 def bar():    
-    import nano_kafka
-    from nano_stream_processor import NanoStreamProcessor
+    import nanostream_kafka
+    from nanostream_processor import NanoStreamProcessor
 
     class NanoPrinter(NanoStreamProcessor):
         def process_item(self, message):
@@ -163,13 +177,12 @@ def bar():
     class PrintFooWorker(NanoGraphWorker):
         def worker(self):
             print 'foo'
-            print self.__dict__
 
-    collect_offsets_worker = nano_kafka.CollectKafkaOffsets()
+    collect_offsets_worker = nanostream_kafka.CollectKafkaOffsets()
 
     my_printer = NanoPrinter()
     my_foo_printer = PrintFooWorker()
-    some_listener = nano_kafka.NanoKafkaListener(
+    some_listener = nanostream_kafka.NanoKafkaListener(
         topics=['public.members.v1'])
     pipeline = NanoStreamGraph()
     pipeline.add_node(some_listener)
