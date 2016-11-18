@@ -1,2 +1,2 @@
 pyprimes
-networkx>1.11,<2.0
+networkx>=1.11,<2.0
