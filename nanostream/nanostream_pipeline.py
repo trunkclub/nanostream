@@ -69,7 +69,7 @@ class NanoStreamGraph(object):
             else:
                 target_list = [target]
             edge_queue = (
-                target.input_queue if hasattr(target, 'input_queue') else
+                # target.input_queue if hasattr(target, 'input_queue') else
                 self.queue_constructor(max_queue_size, multiprocess=self.multiprocess))
             for target in target_list:
                 self.graph.add_edge(

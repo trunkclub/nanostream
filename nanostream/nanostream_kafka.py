@@ -136,7 +136,7 @@ class NanoKafkaListener(NanoStreamSender):
             response = self.listener.poll()
             for key, value in response.iteritems():
                 for message in value:
-                    if self.payload_only:
+                    if not self.payload_only:
                         self.queue_message(message)
                         continue
                     self.offset_dictionary[message.topic][message.partition] = message.offset
@@ -179,8 +179,8 @@ class NanoKafkaProducer(object):
         self.topic = topic
         self.input_queue = input_queue
         self.encode_output = encode_output
-        self.bootstrap_servers = ','.split(
-            bootstrap_servers or os.environ.get('BOOTSTRAP_SERVERS', ''))
+        self.bootstrap_servers = (
+            bootstrap_servers or os.environ.get('BOOTSTRAP_SERVERS', '')).split(',')
         self.producer = kafka.KafkaProducer(
             bootstrap_servers=self.bootstrap_servers)
 
@@ -206,7 +206,7 @@ class NanoKafkaProducer(object):
 
     def start(self, **kwargs):
         while 1:
-            one_item = self.input_queue.get(block=True, timeout=None)
+            one_item = self.input_queue.get()
             one_item = decode(one_item)
             if self.encode_output:
                 one_item = encode(one_item)
