@@ -49,7 +49,6 @@ class NanoStreamListenerMultiplex(object):
                 function_name: function for function_name, function
                 in self.listener_class.__dict__.iteritems() if
                 isinstance(function, types.FunctionType)}
-            # me.rebound = types.MethodType(unbound, me, Person)
             for function_name, the_function in child_class_function_dict.iteritems():
                 setattr(
                     listener, function_name, types.MethodType(
@@ -71,7 +70,6 @@ class NanoStreamListener(object):
         # Change the class if we're going to multiplex it
         if self.workers > 1:
             self.child_class = self.__class__
-            # Get all the user-defined functions and pass them through
             self.__class__ = NanoStreamListenerMultiplex
             self.__init__(
                 workers=workers, listener_class=self.child_class, **kwargs)
@@ -82,16 +80,11 @@ class NanoStreamListener(object):
     def start(self):
         while 1:
             one_item = self.input_queue.get(block=True, timeout=None)
-            if one_item is None:
-                continue
             one_item = decode(one_item)
             one_item = self.process_item(one_item)
             if hasattr(self, 'output_queue_list') and len(
-                    self.output_queue_list) > 0 and one_item is not None:
-                if not isinstance(one_item, list):
-                    one_item = [one_item]
-                for list_item in one_item:
-                    self.queue_message(list_item)
+                    self.output_queue_list) > 0:
+                self.queue_message(one_item)
 
 
 class NanoStreamProcessor(NanoStreamListener, NanoStreamSender):
@@ -99,7 +92,6 @@ class NanoStreamProcessor(NanoStreamListener, NanoStreamSender):
     """
     def __init__(self, input_queue=None, output_queue=None):
         super(NanoStreamProcessor, self).__init__()
-        NanoStreamSender.__init__(self)
         self.start = super(NanoStreamProcessor, self).start
 
     def process_item(self, *args, **kwargs):

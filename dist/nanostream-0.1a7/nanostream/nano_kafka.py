@@ -24,11 +24,11 @@ import logging
 import cPickle as pickle
 import collections
 import kafka
-from nanostream.nano_stream_encoder import encode, decode
-from nanostream.nano_stream_processor import NanoStreamSender
-from nanostream.nano_stream_pipeline import (
+from nano_streams.nano_stream_encoder import encode, decode
+from nano_streams.nano_stream_processor import NanoStreamSender
+from nano_streams.nano_stream_pipeline import (
     NanoGraphWorker, NanoStreamGraph, NanoPrinter)
-from nanostream.nano_stream_processor import NanoStreamProcessor
+from nano_streams.nano_stream_processor import NanoStreamProcessor
 
 
 MAX_QUEUE_SIZE = 1000
@@ -61,14 +61,12 @@ class NanoKafkaListener(NanoStreamSender):
         self.started = time.time()
         self.auto_offset_reset = auto_offset_reset
         self.topics = topics or []
-        self.bootstrap_servers = (
-            bootstrap_servers or os.environ.get(
-                'BOOTSTRAP_SERVERS', '')).split(',')
-        print self.bootstrap_servers
+        self.bootstrap_servers = ','.split(
+            bootstrap_servers or os.environ.get('BOOTSTRAP_SERVERS', ''))
         self.producer = kafka.KafkaProducer(
             bootstrap_servers=self.bootstrap_servers)
         self.group_id = group_id
-        self.auto_offset_reset = auto_offset_reset
+        self.auto_offset_reset = auto_offset_rest
 
         if len(self.bootstrap_servers) == 0:
             raise Exception(
