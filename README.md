@@ -19,6 +19,16 @@ topology. Your pipeline will have a `start` method that will run everything
 asynchronously. It'll use back-pressure to prevent any queues from becoming
 overrun. Everything runs in-memory, making it pretty fast.
 
+This framework supports multithreading and multiprocessing transparently. By
+default, your pipeline will execute each of your classes in its own thread.
+But if you want to utilize more than one CPU on your machine, just set
+`multiprocess=True`, and leave everything else the same. The classes will run
+in their own forked processes (via the `multiprocessing` module). In order to
+create multiple copies of a class for parallel processing, simply specify
+`workers=n`, where `n` is the number of processes you want the pipeline to
+create. Each piece of data sent through the pipeline will be received and
+processed by exactly one of the `n` workers.
+
 # Basic example
 
 There are four classes that underpin `nanostream`:
@@ -65,8 +75,7 @@ demonstrate how the pipeline copes with a bottleneck.
 
     nano_counter = NanoCounter()
     nano_multi_print = NanoMultiPrint(workers=3)
-    import pdb; pdb.set_trace()
-    pipeline = NanoStreamGraph()
+    pipeline = NanoStreamGraph(multiprocess=False)  # Set to `True` if you like
     pipeline.add_edge(nano_counter, nano_multi_print)
     pipeline.start()
 ```
