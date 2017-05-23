@@ -29,20 +29,23 @@ class NanoStreamSender(object):
     def __init__(self, *args, **kwargs):
         self.output_queue_list = []
 
-    def queue_message(self, message):
+    def queue_message(self, message, output_queues=None):
+        output_queues = output_queues or []
         message = encode(message)
         for output_queue in self.output_queue_list:
-            output_queue.put(message, block=True, timeout=None)
+            if output_queues is None or output_queue.name in output_queues:
+                output_queue.put(message, block=True, timeout=None)
 
 
 class NanoStreamQueue(object):
     """
     """
-    def __init__(self, max_queue_size, multiprocess=False):
+    def __init__(self, max_queue_size, multiprocess=False, name=None):
         self.multiprocess = multiprocess
         self.queue = (
             mp.Queue() if multiprocess else Queue.Queue(max_queue_size))
         self.lock = mp.Lock() if multiprocess else threading.Lock()
+        self.name = name
 
     def get(self):
         self.lock.acquire()
