@@ -128,6 +128,7 @@ class NanoGraphWorker(object):
 
 class NanoPrinter(NanoStreamProcessor):
     def process_item(self, message):
+        print message
         pass
         # print message
 

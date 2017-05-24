@@ -1,0 +1,9 @@
+pipeline_name: pipeline_example
+node_sequence:
+  - name: counter
+    class: NanoStreamCounter
+    delay: 1
+  - name: printer
+    class: PrintStreamProcessor 
+    parents:
+      - counter

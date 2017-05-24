@@ -30,7 +30,6 @@ class NanoStreamSender(object):
         self.output_queue_list = []
 
     def queue_message(self, message, output_queues=None):
-        output_queues = output_queues or []
         message = encode(message)
         for output_queue in self.output_queue_list:
             if output_queues is None or output_queue.name in output_queues:
@@ -56,7 +55,6 @@ class NanoStreamQueue(object):
     def put(self, message, *args, **kwargs):
         self.queue.put(message)
     
-
 
 class NanoStreamListenerMultiplex(object):
     def __init__(self, *args, **kwargs):
