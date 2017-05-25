@@ -3,7 +3,7 @@ import time
 from nanostream_processor import *
 from nanostream_pipeline import NanoStreamGraph
 from nanostream_file_handler import FileReader, FileWriter
-from watchdog_source import WatchdogDirectoryListener
+from nanostream_watchdog import WatchdogDirectoryListener
 
 
 class NanoStreamCounter(NanoStreamSender):
