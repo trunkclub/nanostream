@@ -1,0 +1,18 @@
+pipeline_name: watchdog_example
+node_sequence:
+  - name: watchdog
+    class: WatchdogDirectoryListener
+    watchdog_path: inbox
+  - name: printer
+    class: PrintStreamProcessor 
+    parents:
+      - watchdog
+  - name: read_the_file
+    class: FileReader
+    parents:
+      - watchdog
+  - name: copy_the_file
+    class: FileWriter
+    parents:
+      - read_the_file
+    path: outbox

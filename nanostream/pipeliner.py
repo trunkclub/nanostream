@@ -2,6 +2,8 @@ import yaml
 import time
 from nanostream_processor import *
 from nanostream_pipeline import NanoStreamGraph
+from nanostream_file_handler import FileReader, FileWriter
+from watchdog_source import WatchdogDirectoryListener
 
 
 class NanoStreamCounter(NanoStreamSender):
@@ -16,7 +18,7 @@ class NanoStreamCounter(NanoStreamSender):
             iteration += 1
     
 
-PIPELINE_CONFIG_FILE = 'pipeline.yml'
+PIPELINE_CONFIG_FILE = 'watchdog_pipeline.yml'
 with open(PIPELINE_CONFIG_FILE, 'r') as pipeline_file:
     pipeline_config = yaml.load(pipeline_file)
 
@@ -50,5 +52,4 @@ for node_config in pipeline_config['node_sequence']:
         parent_node = node_obj_dict[parent]
         print parent_node, '>>', child_node
         nanostream_graph.add_edge(parent_node, child_node)
-print node_obj_dict['counter'].__dict__
 nanostream_graph.start()

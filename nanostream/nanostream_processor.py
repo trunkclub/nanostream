@@ -129,6 +129,13 @@ class NanoStreamProcessor(NanoStreamListener, NanoStreamSender):
         raise Exception("process_item needs to be overridden in child class.")
 
 
+class DirectoryWatchdog(NanoStreamSender):
+    """
+    Watches a directory for new or modified files, reads them, sends them
+    downstream.
+    """
+    pass
+
 class PrintStreamProcessor(NanoStreamProcessor):
     """
     Just a class that prints, for testing purposes only.
