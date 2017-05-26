@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
-
-
 from setuptools import setup, find_packages
 import os
 
-
 setup(
     name='nanostream',
-    version='0.1-alpha14',
+    version='0.2.0',
     description='Stream-processing patterns at small scale, no overhead',
     long_description=(
         'Set up asychronous stream processing using pure Python with minimal '
