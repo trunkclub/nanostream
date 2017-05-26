@@ -1,3 +1,4 @@
+import sys
 import yaml
 import time
 from nanostream_processor import *
@@ -17,39 +18,40 @@ class NanoStreamCounter(NanoStreamSender):
             time.sleep(1)
             iteration += 1
     
+if __name__ == '__main__':
+    PIPELINE_CONFIG_FILE = sys.argv[1]
 
-PIPELINE_CONFIG_FILE = 'watchdog_pipeline.yml'
-with open(PIPELINE_CONFIG_FILE, 'r') as pipeline_file:
-    pipeline_config = yaml.load(pipeline_file)
+    with open(PIPELINE_CONFIG_FILE, 'r') as pipeline_file:
+        pipeline_config = yaml.load(pipeline_file)
 
-print pipeline_config
+    print pipeline_config
 
-node_obj_dict = {}
+    node_obj_dict = {}
 
-for node_config in pipeline_config['node_sequence']:
-    node_class = globals()[node_config['class']]
-    del node_config['class']
-    node_name = node_config['name']
-    del node_config['name']
-    parents = node_config.get('parents', [])
-    try:
-        del node_config['parents']
-    except KeyError:
-        pass
-    node_obj = node_class(**node_config)
-    node_config['node_obj'] = node_obj
-    node_config['class'] = node_class
-    node_config['name'] = node_name
-    node_config['parents'] = parents
-    node_obj_dict[node_name] = node_obj
+    for node_config in pipeline_config['node_sequence']:
+        node_class = globals()[node_config['class']]
+        del node_config['class']
+        node_name = node_config['name']
+        del node_config['name']
+        parents = node_config.get('parents', [])
+        try:
+            del node_config['parents']
+        except KeyError:
+            pass
+        node_obj = node_class(**node_config)
+        node_config['node_obj'] = node_obj
+        node_config['class'] = node_class
+        node_config['name'] = node_name
+        node_config['parents'] = parents
+        node_obj_dict[node_name] = node_obj
 
-nanostream_graph = NanoStreamGraph()
-for node_name, node_obj in node_obj_dict.iteritems():
-    nanostream_graph.add_node(node_obj)
-for node_config in pipeline_config['node_sequence']:
-    child_node = node_obj_dict[node_config['name']]
-    for parent in node_config['parents']:
-        parent_node = node_obj_dict[parent]
-        print parent_node, '>>', child_node
-        nanostream_graph.add_edge(parent_node, child_node)
-nanostream_graph.start()
+    nanostream_graph = NanoStreamGraph()
+    for node_name, node_obj in node_obj_dict.iteritems():
+        nanostream_graph.add_node(node_obj)
+    for node_config in pipeline_config['node_sequence']:
+        child_node = node_obj_dict[node_config['name']]
+        for parent in node_config['parents']:
+            parent_node = node_obj_dict[parent]
+            print parent_node, '>>', child_node
+            nanostream_graph.add_edge(parent_node, child_node)
+    nanostream_graph.start()
