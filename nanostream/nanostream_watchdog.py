@@ -24,6 +24,7 @@ class WatchdogDirectoryListener(NanoStreamSender):
         super(WatchdogDirectoryListener, self).__init__()
 
     def file_modified(self, *args, **kwargs):
+        print 'file modified...'
         if not isinstance(args[0], FileModifiedEvent):
             return None  # NoneType is automatically ignored
         modified_file = args[0].src_path

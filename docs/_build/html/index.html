@@ -1,0 +1,181 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>NanoStream &#8212; NanoStream 0.2.3 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.2.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="nanostream">
+<h1>NanoStream<a class="headerlink" href="#nanostream" title="Permalink to this headline">¶</a></h1>
+<p>The purpose of NanoStream is to enable us to use the very nice design patterns
+afforded by large-scale streaming frameworks such as Spark or Storm, but
+without the heavyweight dependencies and infrastructure requirements. I expect
+some version of this to be useful for ETL work, especially.</p>
+<p>NanoStream defines a class called <code class="docutils literal"><span class="pre">NanoStreamProcessor</span></code> which reads incoming
+data from a queue, and does something with it, optionally passing the results
+to another <code class="docutils literal"><span class="pre">NanoStreamProcessor</span></code> downstream. These classes are instantiated
+and linked to each other in a directed acyclic graph (think of a flowchart with
+no loops) known as a <code class="docutils literal"><span class="pre">NanoStreamGraph</span></code> or “pipeline”.</p>
+<p>For example, it’s easy to write design a pipeline that watches for new files
+to appear in a directory, read them, transform them somehow, and publish the
+results to Kafka. In this example, there would be four nodes in your
+pipeline, where each node is an instance of a class designed to perform a
+single task. The first is a <code class="docutils literal"><span class="pre">DirectoryListener</span></code>, the second is a <code class="docutils literal"><span class="pre">FileReader</span></code>,
+the third is some other class that (e.g.) validates the file or performs a
+computation, and the fourth would be a <code class="docutils literal"><span class="pre">KafkaProducer</span></code>. Those three classes
+are pre-defined in the <code class="docutils literal"><span class="pre">NanoStream</span></code> package, so you shouldn’t have to write
+any code whatsoever in order to use them. Instead, you’d set up the pipeline
+in a simple configuration file.</p>
+<p>If you need to do something that doesn’t exist in one of the classes already,
+you can write your own with minimal hassle. It would follow this template:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyAmazingClass</span><span class="p">(</span><span class="n">NanoStreamProcessor</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">process_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="n">DO</span> <span class="n">SOMETHING</span> <span class="n">WITH</span> <span class="n">message</span>
+        <span class="k">return</span> <span class="n">result</span>
+</pre></div>
+</div>
+<p>By inheriting from <code class="docutils literal"><span class="pre">NanoStreamProcessor</span></code>, you get all the functionality
+required to incorporate <code class="docutils literal"><span class="pre">MyAmazingClass</span></code> into a pipeline. The only
+thing you are required to do is provide a method called <code class="docutils literal"><span class="pre">process_item</span></code>
+that does the actual work and returns the result. Anything you return
+will be passed downstream to the appropriate nodes in your pipeline. Any
+pickle-able Python object can be sent through the pipeline.</p>
+<p>All nodes work in their own threads, so there are no bottlenecks. Of course,
+you’re not getting true multiprocessing, as Python threads all operate in
+the same core. There is experimental code to use true multiprocessing instead
+of threading, but it should not (yet) be considered safe.</p>
+<div class="toctree-wrapper compound">
+</div>
+<p>Configuration files for <code class="docutils literal"><span class="pre">NanoStream</span></code> pipelines look like this:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">pipeline_name</span><span class="p">:</span> <span class="n">watchdog_example</span>
+<span class="n">node_sequence</span><span class="p">:</span>
+  <span class="o">-</span> <span class="n">name</span><span class="p">:</span> <span class="n">watchdog</span>
+    <span class="n">class</span><span class="p">:</span> <span class="n">WatchdogDirectoryListener</span>
+    <span class="n">watchdog_path</span><span class="p">:</span> <span class="n">inbox</span>
+  <span class="o">-</span> <span class="n">name</span><span class="p">:</span> <span class="n">printer</span>
+    <span class="n">class</span><span class="p">:</span> <span class="n">PrintStreamProcessor</span>
+    <span class="n">parents</span><span class="p">:</span>
+      <span class="o">-</span> <span class="n">watchdog</span>
+  <span class="o">-</span> <span class="n">name</span><span class="p">:</span> <span class="n">read_the_file</span>
+    <span class="n">class</span><span class="p">:</span> <span class="n">FileReader</span>
+    <span class="n">parents</span><span class="p">:</span>
+      <span class="o">-</span> <span class="n">watchdog</span>
+  <span class="o">-</span> <span class="n">name</span><span class="p">:</span> <span class="n">copy_the_file</span>
+    <span class="n">class</span><span class="p">:</span> <span class="n">FileWriter</span>
+    <span class="n">parents</span><span class="p">:</span>
+      <span class="o">-</span> <span class="n">read_the_file</span>
+    <span class="n">path</span><span class="p">:</span> <span class="n">outbox</span>
+</pre></div>
+</div>
+<p>These files are in YAML format; the description of the pipeline is
+under the key <code class="docutils literal"><span class="pre">node_sequence</span></code>. Each node sequence requires
+a unique name, the name of the class that will be used, any parents
+of the node (i.e. the nodes which send their results to its queue),
+and any parameters that are to be sent to the class’s constructor
+(if any).</p>
+<p>To run the pipeline, do: <code class="docutils literal"><span class="pre">python</span> <span class="pre">-i</span> <span class="pre">pipeliner.py</span> <span class="pre">CONFIG_FILE</span></code>, which
+will read your configuration file, instantiate the appropriate
+<code class="docutils literal"><span class="pre">NanoStreamGraph</span></code>, and start it.</p>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">NanoStream</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Zachary Ernst.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

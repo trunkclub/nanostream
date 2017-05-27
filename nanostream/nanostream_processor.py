@@ -22,6 +22,12 @@ import types
 from nanostream_encoder import encode, decode
 
 
+class NanoStreamMessage(object):
+
+    def __init__(self, message_content):
+        self.message_content = message_content
+        self.foo = 'bar'
+
 class NanoStreamSender(object):
     """
     Anything with an output queue.
@@ -29,7 +35,13 @@ class NanoStreamSender(object):
     def __init__(self, *args, **kwargs):
         self.output_queue_list = []
 
+
     def queue_message(self, message, output_queues=None):
+        # Note: `isinstance` won't work here because we're using some
+        # magic to instantiate classes from the pipeline config files.
+        # So we have to resort to comparing the **names** of classes.
+        if message.__class__.__name__ != 'NanoStreamMessage':
+            message = NanoStreamMessage(message)
         message = encode(message)
         for output_queue in self.output_queue_list:
             if output_queues is None or output_queue.name in output_queues:
@@ -83,6 +95,7 @@ class NanoStreamListenerMultiplex(object):
             i.start()
 
 
+
 class NanoStreamListener(object):
     """
     Anything that reads from an input queue.
@@ -108,7 +121,8 @@ class NanoStreamListener(object):
             if one_item is None:
                 continue
             one_item = decode(one_item)
-            one_item = self.process_item(one_item)
+            one_item.message_content = self.process_item(
+                one_item.message_content)
             if hasattr(self, 'output_queue_list') and len(
                     self.output_queue_list) > 0 and one_item is not None:
                 if not isinstance(one_item, list):
@@ -124,6 +138,17 @@ class NanoStreamProcessor(NanoStreamListener, NanoStreamSender):
         super(NanoStreamProcessor, self).__init__()
         NanoStreamSender.__init__(self)
         self.start = super(NanoStreamProcessor, self).start
+    
+    @property
+    def is_sink(self):
+        return (
+            not hasattr(self, 'output_queues') or
+            len(self.output_queues) == 0)
+
+
+    @property
+    def is_source(self):
+        return not hasattr(self, 'input_queue')
 
     def process_item(self, *args, **kwargs):
         raise Exception("process_item needs to be overridden in child class.")
