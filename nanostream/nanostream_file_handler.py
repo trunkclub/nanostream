@@ -14,7 +14,7 @@ class FileReader(NanoStreamProcessor):
 
 
 def random_hash(seed=None):
-    return hashlib.md5(seed or str(random.random)).hexdigest()
+    return hashlib.md5(seed or str(random.random())).hexdigest()
 
 
 class FileWriter(NanoStreamProcessor):
@@ -28,6 +28,7 @@ class FileWriter(NanoStreamProcessor):
         super(FileWriter, self).__init__()
 
     def process_item(self, item):
+        print 'in process_item of FileWriter...'
         with open('/'.join([self.path, random_hash()]), 'w') as nano_file:
             nano_file.write(item)
         return item

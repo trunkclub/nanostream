@@ -5,3 +5,4 @@ python-dotenv==0.6.0
 sphinxcontrib-napoleon
 networkx
 watchdog==0.8.3
+PyYAML
