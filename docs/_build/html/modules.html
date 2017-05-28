@@ -1,0 +1,300 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Modules &mdash; NanoStream 0.2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="NanoStream 0.2.3 documentation" href="index.html"/>
+        <link rel="prev" title="NanoStream" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> NanoStream
+          
+
+          
+            
+            <img src="_static/daleks.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#file-handler-nanostream-file-handler">File Handler (nanostream_file_handler)</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">NanoStream</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Modules</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/modules.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="modules">
+<h1>Modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h1>
+<p>This document contains all the inline documentation for modules in the
+<code class="docutils literal"><span class="pre">NanoStream</span></code> package.</p>
+<div class="section" id="file-handler-nanostream-file-handler">
+<h2>File Handler (nanostream_file_handler)<a class="headerlink" href="#file-handler-nanostream-file-handler" title="Permalink to this headline">¶</a></h2>
+<p>This module contains the classes for reading and writing files.</p>
+<span class="target" id="module-nanostream.nanostream_file_handler"></span><p>Classes that can be instantiated in a <code class="docutils literal"><span class="pre">NanoStreamGraph</span></code> to
+read and write files.</p>
+<dl class="class">
+<dt id="nanostream.nanostream_file_handler.FileReader">
+<em class="property">class </em><code class="descclassname">nanostream.nanostream_file_handler.</code><code class="descname">FileReader</code><span class="sig-paren">(</span><em>input_queue=None</em>, <em>output_queue=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nanostream/nanostream_file_handler.html#FileReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nanostream.nanostream_file_handler.FileReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a file and passes its contents down the pipeline.</p>
+<dl class="method">
+<dt id="nanostream.nanostream_file_handler.FileReader.process_item">
+<code class="descname">process_item</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nanostream/nanostream_file_handler.html#FileReader.process_item"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nanostream.nanostream_file_handler.FileReader.process_item" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a file into memory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Filename</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="nanostream.nanostream_file_handler.FileWriter">
+<em class="property">class </em><code class="descclassname">nanostream.nanostream_file_handler.</code><code class="descname">FileWriter</code><span class="sig-paren">(</span><em>path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nanostream/nanostream_file_handler.html#FileWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nanostream.nanostream_file_handler.FileWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the message to a file with a random name in a specified
+directory.</p>
+<dl class="method">
+<dt id="nanostream.nanostream_file_handler.FileWriter.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nanostream/nanostream_file_handler.html#FileWriter.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nanostream.nanostream_file_handler.FileWriter.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Directory path for the file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nanostream.nanostream_file_handler.FileWriter.process_item">
+<code class="descname">process_item</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nanostream/nanostream_file_handler.html#FileWriter.process_item"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nanostream.nanostream_file_handler.FileWriter.process_item" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the file to the <code class="docutils literal"><span class="pre">self.path</span></code> directory, with a random
+filename generated by the <code class="docutils literal"><span class="pre">random_hash</span></code> function.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="nanostream.nanostream_file_handler.random_hash">
+<code class="descclassname">nanostream.nanostream_file_handler.</code><code class="descname">random_hash</code><span class="sig-paren">(</span><em>seed=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nanostream/nanostream_file_handler.html#random_hash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nanostream.nanostream_file_handler.random_hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a random hash; usually for naming files uniquely.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="NanoStream" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Zachary Ernst.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2.3',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

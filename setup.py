@@ -4,7 +4,7 @@ import os
 
 setup(
     name='nanostream',
-    version='0.2.0',
+    version='0.2.3',
     description='Stream-processing patterns at small scale, no overhead',
     long_description=(
         'Set up asychronous stream processing using pure Python with minimal '

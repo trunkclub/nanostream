@@ -51,9 +51,6 @@ you're not getting true multiprocessing, as Python threads all operate in
 the same core. There is experimental code to use true multiprocessing instead
 of threading, but it should not (yet) be considered safe.
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
 
 Configuration files for ``NanoStream`` pipelines look like this:
 
@@ -89,6 +86,11 @@ To run the pipeline, do: ``python -i pipeliner.py CONFIG_FILE``, which
 will read your configuration file, instantiate the appropriate
 ``NanoStreamGraph``, and start it.
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+   
+   Modules <modules>
 Indices and tables
 ==================
 
