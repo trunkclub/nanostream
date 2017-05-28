@@ -15,18 +15,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import Queue
 import multiprocessing as mp
 import threading
 import types
 from nanostream_encoder import encode, decode
+from nanostream_message import NanoStreamMessage
 
-
-class NanoStreamMessage(object):
-
-    def __init__(self, message_content):
-        self.message_content = message_content
-        self.foo = 'bar'
 
 class NanoStreamSender(object):
     """
@@ -40,12 +36,12 @@ class NanoStreamSender(object):
         # Note: `isinstance` won't work here because we're using some
         # magic to instantiate classes from the pipeline config files.
         # So we have to resort to comparing the **names** of classes.
-        if message.__class__.__name__ != 'NanoStreamMessage':
-            message = NanoStreamMessage(message)
-        message = encode(message)
         for output_queue in self.output_queue_list:
             if output_queues is None or output_queue.name in output_queues:
-                output_queue.put(message, block=True, timeout=None)
+                new_message = NanoStreamMessage(message)
+                print 'Wrapped: ', type(message)
+                new_message = encode(new_message)
+                output_queue.put(new_message, block=True, timeout=None)
 
 
 class NanoStreamQueue(object):
@@ -121,13 +117,13 @@ class NanoStreamListener(object):
             if one_item is None:
                 continue
             one_item = decode(one_item)
-            one_item.message_content = self.process_item(
-                one_item.message_content)
+            print self.__class__.__name__, one_item
+            output = self.process_item(one_item.message_content)  # Process and store in ``output``
             if hasattr(self, 'output_queue_list') and len(
                     self.output_queue_list) > 0 and one_item is not None:
-                if not isinstance(one_item, list):
-                    one_item = [one_item]
-                for list_item in one_item:
+                if not isinstance(output, list):
+                    output = [output]  # Results will always be in a list
+                for list_item in output:  # If we get back a list send each item by itself
                     self.queue_message(list_item)
 
 
