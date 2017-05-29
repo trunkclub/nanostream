@@ -20,6 +20,7 @@ import Queue
 import multiprocessing as mp
 import threading
 import types
+import time
 from nanostream_encoder import encode, decode
 from nanostream_message import NanoStreamMessage
 
@@ -30,18 +31,20 @@ class NanoStreamSender(object):
     """
     def __init__(self, *args, **kwargs):
         self.output_queue_list = []
+        self.message_counter = 1
 
-
-    def queue_message(self, message, output_queues=None):
-        # Note: `isinstance` won't work here because we're using some
-        # magic to instantiate classes from the pipeline config files.
-        # So we have to resort to comparing the **names** of classes.
+    def queue_message(self, message, output_queue_list=None):
+        if self.is_source:
+            message = NanoStreamMessage(message)
+        self.message_counter += 1
         for output_queue in self.output_queue_list:
-            if output_queues is None or output_queue.name in output_queues:
-                new_message = NanoStreamMessage(message)
-                print 'Wrapped: ', type(message)
-                new_message = encode(new_message)
-                output_queue.put(new_message, block=True, timeout=None)
+            time.sleep(1)  # Delay for testing
+            message = encode(message)
+            output_queue.put(message, block=True, timeout=None)
+    
+    @property
+    def is_source(self):
+        return not hasattr(self, 'input_queue')
 
 
 class NanoStreamQueue(object):
@@ -66,6 +69,7 @@ class NanoStreamQueue(object):
 
 class NanoStreamListenerMultiplex(object):
     def __init__(self, *args, **kwargs):
+        self.message_counter = 0
         self.multiplex_workers = kwargs['workers']
         self.listener_class = kwargs['listener_class']
         del kwargs['workers']
@@ -80,16 +84,18 @@ class NanoStreamListenerMultiplex(object):
                 function_name: function for function_name, function
                 in self.listener_class.__dict__.iteritems() if
                 isinstance(function, types.FunctionType)}
-            # me.rebound = types.MethodType(unbound, me, Person)
             for function_name, the_function in child_class_function_dict.iteritems():
                 setattr(
                     listener, function_name, types.MethodType(
                         the_function, listener, self.listener_class)) 
+    
+    @property
+    def is_source(self):
+        return not hasattr(self, 'input_queue')
 
     def start(self):
         for i in self.listeners:
             i.start()
-
 
 
 class NanoStreamListener(object):
@@ -110,20 +116,36 @@ class NanoStreamListener(object):
         else:
             self.input_queue = None
             self.index = index
+        self.message_counter = 0
+
+    def call_process_item(self, message):
+        """
+        This calls the user's ``process_item`` with just the message content,
+        and then returns the full message.
+
+        TODO: Decide on lists as results.
+        """
+        result = self.process_item(message.message_content)
+        result = NanoStreamMessage(result)
+        result.add_history(message)
+        return result
 
     def start(self):
         while 1:
             one_item = self.input_queue.get()
             if one_item is None:
                 continue
+            self.message_counter += 1
             one_item = decode(one_item)
-            print self.__class__.__name__, one_item
-            output = self.process_item(one_item.message_content)  # Process and store in ``output``
+            output = self.call_process_item(one_item)
+            if self.is_sink:
+                print output.__dict__
             if hasattr(self, 'output_queue_list') and len(
                     self.output_queue_list) > 0 and one_item is not None:
                 if not isinstance(output, list):
                     output = [output]  # Results will always be in a list
-                for list_item in output:  # If we get back a list send each item by itself
+                for list_item in output:  # If we get back a list send each item
+                    print type(list_item)
                     self.queue_message(list_item)
 
 
@@ -138,9 +160,8 @@ class NanoStreamProcessor(NanoStreamListener, NanoStreamSender):
     @property
     def is_sink(self):
         return (
-            not hasattr(self, 'output_queues') or
-            len(self.output_queues) == 0)
-
+            not hasattr(self, 'output_queue_list') or
+            len(self.output_queue_list) == 0)
 
     @property
     def is_source(self):
