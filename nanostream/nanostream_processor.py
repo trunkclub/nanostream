@@ -44,7 +44,7 @@ class NanoStreamSender(object):
     
     @property
     def is_source(self):
-        return not hasattr(self, 'input_queue')
+        return not hasattr(self, 'input_queue_list') or len(self.input_queue_list) == 0
 
 
 class NanoStreamQueue(object):
@@ -114,7 +114,7 @@ class NanoStreamListener(object):
             self.__init__(
                 workers=workers, listener_class=self.child_class, **kwargs)
         else:
-            self.input_queue = None
+            self.input_queue_list = []
             self.index = index
         self.message_counter = 0
 
@@ -132,21 +132,22 @@ class NanoStreamListener(object):
 
     def start(self):
         while 1:
-            one_item = self.input_queue.get()
-            if one_item is None:
-                continue
-            self.message_counter += 1
-            one_item = decode(one_item)
-            output = self.call_process_item(one_item)
-            if self.is_sink:
-                print output.__dict__
-            if hasattr(self, 'output_queue_list') and len(
-                    self.output_queue_list) > 0 and one_item is not None:
-                if not isinstance(output, list):
-                    output = [output]  # Results will always be in a list
-                for list_item in output:  # If we get back a list send each item
-                    print type(list_item)
-                    self.queue_message(list_item)
+            for input_queue in self.input_queue_list:
+                one_item = input_queue.get()
+                if one_item is None:
+                    continue
+                self.message_counter += 1
+                one_item = decode(one_item)
+                output = self.call_process_item(one_item)
+                if self.is_sink:
+                    print output.__dict__
+                if hasattr(self, 'output_queue_list') and len(
+                        self.output_queue_list) > 0 and one_item is not None:
+                    if not isinstance(output, list):
+                        output = [output]  # Results will always be in a list
+                    for list_item in output:  # If we get back a list send each item
+                        print type(list_item)
+                        self.queue_message(list_item)
 
 
 class NanoStreamProcessor(NanoStreamListener, NanoStreamSender):
@@ -165,7 +166,7 @@ class NanoStreamProcessor(NanoStreamListener, NanoStreamSender):
 
     @property
     def is_source(self):
-        return not hasattr(self, 'input_queue')
+        return len(self.input_queue_list) == 0
 
     def process_item(self, *args, **kwargs):
         raise Exception("process_item needs to be overridden in child class.")

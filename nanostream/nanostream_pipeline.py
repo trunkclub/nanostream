@@ -76,7 +76,7 @@ class NanoStreamGraph(object):
                     source, target,
                     {'edge_queue': edge_queue,
                      'queue_lock': threading.Lock()})
-                target.input_queue = edge_queue
+                target.input_queue_list.append(edge_queue)
             source.output_queue_list.append(edge_queue)
 
     def add_worker(self, worker_object, interval=3):
