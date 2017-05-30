@@ -3,10 +3,15 @@ node_sequence:
   - name: watchdog
     class: WatchdogDirectoryListener
     watchdog_path: inbox
+  - name: echo
+    class: Echo
+    parents:
+      - watchdog
   - name: printer
     class: PrintStreamProcessor 
     parents:
       - watchdog
+      - echo
   - name: read_the_file
     class: FileReader
     parents:

@@ -42,7 +42,7 @@ class NanoStreamMessage(object):
         """
 
         self.history = message.history
-        del message.history
+        message.history = []
         self.history.append(message)
 
     def __repr__(self):

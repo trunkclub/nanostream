@@ -16,12 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import copy
 import Queue
 import multiprocessing as mp
 import threading
 import types
 import time
-from nanostream_encoder import encode, decode
+# from nanostream_encoder import encode, decode
 from nanostream_message import NanoStreamMessage
 
 
@@ -39,12 +40,14 @@ class NanoStreamSender(object):
         self.message_counter += 1
         for output_queue in self.output_queue_list:
             time.sleep(1)  # Delay for testing
-            message = encode(message)
+            # message = encode(message)
             output_queue.put(message, block=True, timeout=None)
     
     @property
     def is_source(self):
-        return not hasattr(self, 'input_queue_list') or len(self.input_queue_list) == 0
+        return (
+            not hasattr(self, 'input_queue_list') or
+            len(self.input_queue_list) == 0)
 
 
 class NanoStreamQueue(object):
@@ -137,7 +140,8 @@ class NanoStreamListener(object):
                 if one_item is None:
                     continue
                 self.message_counter += 1
-                one_item = decode(one_item)
+                # one_item = decode(one_item)
+                print 'one_item:', one_item
                 output = self.call_process_item(one_item)
                 if self.is_sink:
                     print output.__dict__
@@ -166,25 +170,29 @@ class NanoStreamProcessor(NanoStreamListener, NanoStreamSender):
 
     @property
     def is_source(self):
-        return len(self.input_queue_list) == 0
+        return (
+            not hasattr(self, 'input_queue_list') or
+            len(self.input_queue_list) == 0)
 
     def process_item(self, *args, **kwargs):
         raise Exception("process_item needs to be overridden in child class.")
 
 
-class DirectoryWatchdog(NanoStreamSender):
+class Echo(NanoStreamProcessor):
     """
-    Watches a directory for new or modified files, reads them, sends them
-    downstream.
+    Does nothing
     """
-    pass
+
+    def process_item(self, item):
+        return item
+
 
 class PrintStreamProcessor(NanoStreamProcessor):
     """
     Just a class that prints, for testing purposes only.
     """
     def process_item(self, item):
-        print item
+        print 'printer:', item
         return item
 
 
