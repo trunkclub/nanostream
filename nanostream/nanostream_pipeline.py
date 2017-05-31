@@ -76,6 +76,7 @@ class NanoStreamGraph(object):
                     source, target,
                     {'edge_queue': edge_queue,
                      'queue_lock': threading.Lock()})
+                edge_queue.name = source.name
                 target.input_queue_list.append(edge_queue)
             source.output_queue_list.append(edge_queue)
 

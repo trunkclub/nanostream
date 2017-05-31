@@ -3,12 +3,7 @@ node_sequence:
   - name: watchdog
     class: WatchdogDirectoryListener
     watchdog_path: inbox
-  - name: read_the_file
-    class: FileReader
+  - name: printer
+    class: PrintStreamProcessor
     parents:
       - watchdog
-  - name: copy_the_file
-    class: FileWriter
-    parents:
-      - read_the_file
-    path: outbox

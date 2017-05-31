@@ -5,7 +5,7 @@ from nanostream_processor import *
 from nanostream_pipeline import NanoStreamGraph
 from nanostream_file_handler import FileReader, FileWriter
 from nanostream_watchdog import WatchdogDirectoryListener
-
+from nanostream_csv import CSVSerializer
 
 class NanoStreamCounter(NanoStreamSender):
     def start(self):
@@ -50,6 +50,7 @@ if __name__ == '__main__':
         nanostream_graph.add_node(node_obj)
     for node_config in pipeline_config['node_sequence']:
         child_node = node_obj_dict[node_config['name']]
+        child_node.name = node_config['name']
         for parent in node_config['parents']:
             parent_node = node_obj_dict[parent]
             print parent_node, '>>', child_node

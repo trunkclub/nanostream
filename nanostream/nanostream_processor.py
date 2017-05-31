@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import copy
+import types
 import Queue
 import multiprocessing as mp
 import threading
 import types
 import time
-# from nanostream_encoder import encode, decode
 from nanostream_message import NanoStreamMessage
 
 
@@ -35,13 +35,27 @@ class NanoStreamSender(object):
         self.message_counter = 1
 
     def queue_message(self, message, output_queue_list=None):
-        if self.is_source:
-            message = NanoStreamMessage(message)
-        self.message_counter += 1
-        for output_queue in self.output_queue_list:
-            time.sleep(1)  # Delay for testing
-            # message = encode(message)
-            output_queue.put(message, block=True, timeout=None)
+        """
+        We'll test whether ``message`` is a ``generator``. If so,
+        loop until it's exhausted.
+        """
+
+        def queue_inner(one_message):
+            print 'one_message:', one_message
+            if self.is_source:
+                print 'source'
+                one_message = NanoStreamMessage(one_message)
+            self.message_counter += 1
+            for output_queue in self.output_queue_list:
+                time.sleep(1)  # Delay for testing
+                # output_queue.put(NanoStreamMessage(message), block=True, timeout=None)
+                output_queue.put(one_message, block=True, timeout=None)
+
+        if isinstance(message, types.GeneratorType):
+            for one_message in message:
+                queue_inner(message)
+        else:
+            queue_inner(message)
     
     @property
     def is_source(self):
@@ -58,7 +72,6 @@ class NanoStreamQueue(object):
         self.queue = (
             mp.Queue() if multiprocess else Queue.Queue(max_queue_size))
         self.lock = mp.Lock() if multiprocess else threading.Lock()
-        self.name = name
 
     def get(self):
         self.lock.acquire()
@@ -71,6 +84,10 @@ class NanoStreamQueue(object):
     
 
 class NanoStreamListenerMultiplex(object):
+    """
+    This class is very, very not safe.
+    """
+
     def __init__(self, *args, **kwargs):
         self.message_counter = 0
         self.multiplex_workers = kwargs['workers']
@@ -137,21 +154,17 @@ class NanoStreamListener(object):
         while 1:
             for input_queue in self.input_queue_list:
                 one_item = input_queue.get()
+
+                print 'one_item:', one_item
+                one_item.from_queue = input_queue.name
                 if one_item is None:
                     continue
                 self.message_counter += 1
                 # one_item = decode(one_item)
-                print 'one_item:', one_item
                 output = self.call_process_item(one_item)
-                if self.is_sink:
-                    print output.__dict__
                 if hasattr(self, 'output_queue_list') and len(
                         self.output_queue_list) > 0 and one_item is not None:
-                    if not isinstance(output, list):
-                        output = [output]  # Results will always be in a list
-                    for list_item in output:  # If we get back a list send each item
-                        print type(list_item)
-                        self.queue_message(list_item)
+                    self.queue_message(output)
 
 
 class NanoStreamProcessor(NanoStreamListener, NanoStreamSender):
